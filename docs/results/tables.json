@@ -1,0 +1,554 @@
+{
+  "captured_at": "2026-11-18T12:53:09+00:00",
+  "data": "Synthetic order events in a real local Delta table",
+  "source": "lake/silver_order_changes",
+  "runtime": {
+    "python": "3.12.6",
+    "deltalake": "1.6.6",
+    "pandas": "3.1.1",
+    "pyarrow": "26.0.1"
+  },
+  "versions": {
+    "pinned": 2,
+    "latest": 3
+  },
+  "history": {
+    "pinned_row_count": 11,
+    "latest_row_count": 12,
+    "pinned_records": [
+      {
+        "order_id": 1,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 100.0,
+        "arrived_at": "09:00"
+      },
+      {
+        "order_id": 2,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 50.0,
+        "arrived_at": "09:00"
+      },
+      {
+        "order_id": 2,
+        "source_seq": 2,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 60.0,
+        "arrived_at": "10:05"
+      },
+      {
+        "order_id": 2,
+        "source_seq": 3,
+        "op": "upsert",
+        "status": "cancelled",
+        "amount": 60.0,
+        "arrived_at": "09:20"
+      },
+      {
+        "order_id": 3,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 70.0,
+        "arrived_at": "09:10"
+      },
+      {
+        "order_id": 3,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 70.0,
+        "arrived_at": "09:11"
+      },
+      {
+        "order_id": 4,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 35.0,
+        "arrived_at": "09:05"
+      },
+      {
+        "order_id": 4,
+        "source_seq": 2,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 40.0,
+        "arrived_at": "09:30"
+      },
+      {
+        "order_id": 4,
+        "source_seq": 2,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 45.0,
+        "arrived_at": "09:40"
+      },
+      {
+        "order_id": 5,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 80.0,
+        "arrived_at": "09:00"
+      },
+      {
+        "order_id": 5,
+        "source_seq": 2,
+        "op": "delete",
+        "status": null,
+        "amount": null,
+        "arrived_at": "09:50"
+      }
+    ],
+    "latest_records": [
+      {
+        "order_id": 1,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 100.0,
+        "arrived_at": "09:00"
+      },
+      {
+        "order_id": 2,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 50.0,
+        "arrived_at": "09:00"
+      },
+      {
+        "order_id": 2,
+        "source_seq": 2,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 60.0,
+        "arrived_at": "10:05"
+      },
+      {
+        "order_id": 2,
+        "source_seq": 3,
+        "op": "upsert",
+        "status": "cancelled",
+        "amount": 60.0,
+        "arrived_at": "09:20"
+      },
+      {
+        "order_id": 3,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 70.0,
+        "arrived_at": "09:10"
+      },
+      {
+        "order_id": 3,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 70.0,
+        "arrived_at": "09:11"
+      },
+      {
+        "order_id": 4,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 35.0,
+        "arrived_at": "09:05"
+      },
+      {
+        "order_id": 4,
+        "source_seq": 2,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 40.0,
+        "arrived_at": "09:30"
+      },
+      {
+        "order_id": 4,
+        "source_seq": 2,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 45.0,
+        "arrived_at": "09:40"
+      },
+      {
+        "order_id": 5,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 80.0,
+        "arrived_at": "09:00"
+      },
+      {
+        "order_id": 5,
+        "source_seq": 2,
+        "op": "delete",
+        "status": null,
+        "amount": null,
+        "arrived_at": "09:50"
+      },
+      {
+        "order_id": 6,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 90.0,
+        "arrived_at": "11:00"
+      }
+    ],
+    "pinned_sha256": "16aab691367935ef17fbdbd6ad37eb0e938fca74432abf45de9d773e00c49fac"
+  },
+  "current_state": {
+    "records": [
+      {
+        "order_id": 1,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 100.0
+      },
+      {
+        "order_id": 2,
+        "source_seq": 3,
+        "op": "upsert",
+        "status": "cancelled",
+        "amount": 60.0
+      },
+      {
+        "order_id": 3,
+        "source_seq": 1,
+        "op": "upsert",
+        "status": "accepted",
+        "amount": 70.0
+      }
+    ],
+    "exceptions": [
+      4
+    ],
+    "deleted_orders": [
+      5
+    ]
+  },
+  "new_order_ids": [
+    6
+  ],
+  "comparison": [
+    {
+      "order_id": 1,
+      "sales_before": 100,
+      "sales_after": 100,
+      "operations_before": "accepted 100",
+      "operations_after": "accepted 100",
+      "disposition": "current"
+    },
+    {
+      "order_id": 2,
+      "sales_before": 60,
+      "sales_after": null,
+      "operations_before": "cancelled 60",
+      "operations_after": "cancelled 60",
+      "disposition": "current"
+    },
+    {
+      "order_id": 3,
+      "sales_before": 70,
+      "sales_after": 70,
+      "operations_before": "accepted 70",
+      "operations_after": "accepted 70",
+      "disposition": "current"
+    },
+    {
+      "order_id": 4,
+      "sales_before": 45,
+      "sales_after": null,
+      "operations_before": "accepted 40",
+      "operations_after": null,
+      "disposition": "held for review"
+    }
+  ],
+  "changes": [
+    {
+      "report": "sales",
+      "order_id": 2,
+      "old": 60,
+      "new": null,
+      "reason": "cancelled by the source; source order wins over arrival"
+    },
+    {
+      "report": "sales",
+      "order_id": 4,
+      "old": 45,
+      "new": null,
+      "reason": "conflict at the same source position; held for review"
+    },
+    {
+      "report": "operations",
+      "order_id": 4,
+      "old": "accepted 40",
+      "new": null,
+      "reason": "conflict at the same source position; held for review"
+    }
+  ],
+  "result": {
+    "deltalake": "1.6.6",
+    "order_2_before": {
+      "sales": 60,
+      "operations": "cancelled 60"
+    },
+    "order_4_before": {
+      "sales": 45,
+      "operations": "accepted 40"
+    },
+    "current_state": {
+      "1": "accepted 100",
+      "2": "cancelled 60",
+      "3": "accepted 70"
+    },
+    "exceptions": [
+      4
+    ],
+    "sales_total": {
+      "before": 275,
+      "after": 170
+    },
+    "change_log": [
+      [
+        "sales",
+        2,
+        60,
+        null,
+        "cancelled by the source; source order wins over arrival"
+      ],
+      [
+        "sales",
+        4,
+        45,
+        null,
+        "conflict at the same source position; held for review"
+      ],
+      [
+        "operations",
+        4,
+        "accepted 40",
+        null,
+        "conflict at the same source position; held for review"
+      ]
+    ],
+    "unpinned_sales_changes": [
+      [
+        2,
+        "cancelled by the source; source order wins over arrival"
+      ],
+      [
+        4,
+        "conflict at the same source position; held for review"
+      ],
+      [
+        6,
+        "new in Silver"
+      ]
+    ],
+    "cancelled_in_operations": {
+      "filter in Gold": 1,
+      "filter moved to Silver": 0
+    }
+  },
+  "related_lake": {
+    "source": "bronze-to-silver-repair/lake",
+    "scope": "Separate repair demo; different schemas; read-only inspection",
+    "tables": {
+      "bronze_order_changes": {
+        "version": 3,
+        "row_count": 15,
+        "records": [
+          {
+            "order_id": 1,
+            "seq": 1,
+            "order_date": "2026-11-03",
+            "raw_status": "PLACED"
+          },
+          {
+            "order_id": 1,
+            "seq": 2,
+            "order_date": "2026-11-03",
+            "raw_status": "SHIPPED"
+          },
+          {
+            "order_id": 2,
+            "seq": 1,
+            "order_date": "2026-11-03",
+            "raw_status": "PLACED"
+          },
+          {
+            "order_id": 2,
+            "seq": 2,
+            "order_date": "2026-11-03",
+            "raw_status": "CANCELLED"
+          },
+          {
+            "order_id": 3,
+            "seq": 1,
+            "order_date": "2026-11-03",
+            "raw_status": "PLACED"
+          },
+          {
+            "order_id": 3,
+            "seq": 2,
+            "order_date": "2026-11-03",
+            "raw_status": "SHIPPED"
+          },
+          {
+            "order_id": 4,
+            "seq": 1,
+            "order_date": "2026-11-04",
+            "raw_status": "PLACED"
+          },
+          {
+            "order_id": 4,
+            "seq": 2,
+            "order_date": "2026-11-04",
+            "raw_status": "SHIPPED"
+          },
+          {
+            "order_id": 5,
+            "seq": 1,
+            "order_date": "2026-11-04",
+            "raw_status": "PLACED"
+          },
+          {
+            "order_id": 5,
+            "seq": 2,
+            "order_date": "2026-11-04",
+            "raw_status": "CANCELLED"
+          },
+          {
+            "order_id": 6,
+            "seq": 1,
+            "order_date": "2026-11-05",
+            "raw_status": "PLACED"
+          },
+          {
+            "order_id": 6,
+            "seq": 2,
+            "order_date": "2026-11-05",
+            "raw_status": "SHIPPED"
+          },
+          {
+            "order_id": 7,
+            "seq": 1,
+            "order_date": "2026-11-01",
+            "raw_status": "PLACED"
+          },
+          {
+            "order_id": 7,
+            "seq": 2,
+            "order_date": "2026-11-01",
+            "raw_status": "CANCELLED"
+          },
+          {
+            "order_id": 8,
+            "seq": 1,
+            "order_date": "2026-11-06",
+            "raw_status": "PLACED"
+          }
+        ]
+      },
+      "silver_orders": {
+        "version": 6,
+        "row_count": 8,
+        "records": [
+          {
+            "order_id": 1,
+            "order_date": "2026-11-03",
+            "status": "shipped"
+          },
+          {
+            "order_id": 2,
+            "order_date": "2026-11-03",
+            "status": "canceled"
+          },
+          {
+            "order_id": 3,
+            "order_date": "2026-11-03",
+            "status": "shipped"
+          },
+          {
+            "order_id": 4,
+            "order_date": "2026-11-04",
+            "status": "shipped"
+          },
+          {
+            "order_id": 5,
+            "order_date": "2026-11-04",
+            "status": "canceled"
+          },
+          {
+            "order_id": 6,
+            "order_date": "2026-11-05",
+            "status": "shipped"
+          },
+          {
+            "order_id": 7,
+            "order_date": "2026-11-01",
+            "status": "canceled"
+          },
+          {
+            "order_id": 8,
+            "order_date": "2026-11-06",
+            "status": "placed"
+          }
+        ]
+      },
+      "gold_daily_order_totals": {
+        "version": 2,
+        "row_count": 7,
+        "records": [
+          {
+            "order_date": "2026-11-01",
+            "status": "canceled",
+            "orders": 1
+          },
+          {
+            "order_date": "2026-11-03",
+            "status": "canceled",
+            "orders": 1
+          },
+          {
+            "order_date": "2026-11-03",
+            "status": "shipped",
+            "orders": 2
+          },
+          {
+            "order_date": "2026-11-04",
+            "status": "canceled",
+            "orders": 1
+          },
+          {
+            "order_date": "2026-11-04",
+            "status": "shipped",
+            "orders": 1
+          },
+          {
+            "order_date": "2026-11-05",
+            "status": "shipped",
+            "orders": 1
+          },
+          {
+            "order_date": "2026-11-06",
+            "status": "placed",
+            "orders": 1
+          }
+        ]
+      }
+    },
+    "gold_matches_silver": true,
+    "gold_total_orders": 8
+  }
+}

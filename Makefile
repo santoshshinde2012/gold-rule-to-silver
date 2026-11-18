@@ -1,8 +1,9 @@
 # Common tasks. `make` alone runs the full check, the same as ./run_demo.sh plus lint and types.
-.PHONY: all setup test lint types demo clean
+.PHONY: all setup test lint types demo results snapshot clean
 
 VENV := .venv
 PY := $(VENV)/bin/python
+RELATED_LAKE ?=
 
 all: lint types test demo
 
@@ -24,6 +25,12 @@ types: setup
 
 demo: setup
 	$(PY) -m src.silver_rule_demo
+
+results: setup
+	$(PY) -m src.inspection $(if $(RELATED_LAKE),--related-lake "$(RELATED_LAKE)")
+
+snapshot: results
+	$(PY) scripts/capture_snapshot.py
 
 clean:
 	rm -rf $(VENV) lake .pytest_cache .ruff_cache .mypy_cache

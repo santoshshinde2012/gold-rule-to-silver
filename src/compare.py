@@ -6,9 +6,11 @@ should still check each one against a few real orders before signing off.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .models import Change, CurrentState
 
-Answer = dict[int, int | str]
+Answer = Mapping[int, int | str]
 
 
 def explain(order_id: int, old: int | str | None, new: int | str | None, state: CurrentState) -> str:

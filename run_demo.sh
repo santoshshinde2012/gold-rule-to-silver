@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create a virtual environment, install pinned packages, run the tests, then print the article's results.
+# Create a virtual environment, install dependencies, run tests, and print the example results.
 set -euo pipefail
 cd "$(dirname "$0")"
 if [[ ! -d .venv ]]; then
@@ -7,6 +7,6 @@ if [[ ! -d .venv ]]; then
 fi
 # shellcheck disable=SC1091
 source .venv/bin/activate
-pip install -q -r requirements.txt
+python -m pip install -q --disable-pip-version-check -r requirements.txt
 python -m pytest
 python -m src.silver_rule_demo

@@ -1,0 +1,9 @@
+deltalake 1.6.6 on local disk; not a Databricks runtime
+1. Before. Order 2: {'sales': 60, 'operations': 'cancelled 60'}. Order 4: {'sales': 45, 'operations': 'accepted 40'}
+2. Shared Silver current state: {1: 'accepted 100', 2: 'cancelled 60', 3: 'accepted 70'}; held for review: [4]
+3. Sales total before 275, after 170. Change log:
+   ('sales', 2, 60, None, 'cancelled by the source; source order wins over arrival')
+   ('sales', 4, 45, None, 'conflict at the same source position; held for review')
+   ('operations', 4, 'accepted 40', None, 'conflict at the same source position; held for review')
+4. Compared without pinning, sales changes: [(2, 'cancelled by the source; source order wins over arrival'), (4, 'conflict at the same source position; held for review'), (6, 'new in Silver')]
+5. Cancelled orders in operations: {'filter in Gold': 1, 'filter moved to Silver': 0}

@@ -1,40 +1,20 @@
 # Gold Rule to Silver
 
-**Move a cleanup rule that every Gold report copies into one shared Silver rule, without changing reports by surprise, with an executable local Delta Lake example.**
+**Move duplicated order cleanup logic from Gold reports into one shared Silver rule, and explain every changed answer on a pinned Delta Lake version.**
 
-Companion code for **Why Does Every Gold Table Clean the Same Rows?** A sales report and an operations report both pick "the current version of each order" from the same Silver table, each with its own copy of the rule. For one order, sales counts 60 and operations says it was cancelled. The project moves the rule into Silver once, holds back an order it cannot decide, compares old and new answers key by key on one pinned version, and keeps each report's own filter in Gold.
+Companion implementation for **Why Does Every Gold Table Clean the Same Rows?** This project demonstrates a controlled migration: resolve source changes once, preserve each report's business filters, and compare results order by order before moving readers.
 
-Silver here keeps **every change the source sent**, in arrival order. Each change carries a **source position** (`source_seq`), the order in which the source made the changes, and an arrival time, when the pipeline received it. Gold is the reports built on top. The shared rule produces a **current state**: one row per order.
-
-The example uses synthetic order data, Python, pandas, and the open-source `deltalake` library (delta-rs). It runs locally without Spark or a Databricks workspace.
-
-## Place each rule
-
-| Rule | Belongs in | Local implementation |
-| --- | --- | --- |
-| **What one order is** (its current version) | Silver, once | [`current_state`](src/rules.py): repeats count once, the highest source position wins, deletes remove the order, and two different changes at the winning position are held for review. |
-| **What one report counts** | Gold, in that report | [`SalesAfter`](src/reports.py) keeps its accepted-only filter; [`OperationsAfter`](src/reports.py) shows cancelled orders on purpose. |
-| **How a reader moves** | The migration, with a change log | [`change_log`](src/compare.py) compares old and new answers on one pinned Silver version and gives each change a reason. |
-
-The two copied rules are kept as counterexamples: [`latest_by_arrival`](src/rules.py) (the last change to arrive wins) and [`latest_by_position_first_seen`](src/rules.py) (the highest position wins, and on a tie the first row read).
-
-**Implementation scope:** Silver's change log is a real Delta table on local disk, and the pinned comparison uses its table versions. The shared rule, the reports, and the change log are pure pandas computed in memory; no current-state table or Gold table is persisted. Databricks AUTO CDC, pipeline expectations, and Unity Catalog lineage are not executed.
+The example uses synthetic data and real local Delta tables through `deltalake` (delta-rs). It runs with Python and pandas; Spark and a Databricks workspace are not required.
 
 ## Quick start
 
-Requirements: **Python 3.10+**, `pip`, and Bash for the helper script. The first setup requires access to the Python package index. `make` is optional.
-
-Run from the repository root:
+Requirements: **Python 3.10+**, `pip`, and Bash. Initial installation requires access to the Python package index.
 
 ```bash
 ./run_demo.sh
 ```
 
-The script creates `.venv` if needed, installs `requirements.txt`, runs the tests, and prints the scenario results. `deltalake` is pinned to `1.6.6`; the other dependencies have minimum versions.
-
-The demo deletes and recreates the repository's `lake/` directory on each run. Keep that directory reserved for generated demo data. The Python helper `run(lake)` likewise removes the directory passed to it.
-
-To run the same steps manually:
+The script creates `.venv`, installs dependencies, runs the tests, and prints the scenario results. Alternatively:
 
 ```bash
 python3 -m venv .venv
@@ -43,123 +23,139 @@ python3 -m venv .venv
 .venv/bin/python -m src.silver_rule_demo
 ```
 
-### Development commands
+Generated data lives in `lake/silver_order_changes/`; `lake/run.json` records the run's versions and seed checksum. Reruns replace the current contents of **that demo table**, append the later arrival, and retain Delta history and unrelated files. Reserve that table name and manifest for this demo. On a new table the comparison uses v0 and the later arrival creates v1; version numbers increase on subsequent runs.
 
-| Command | Action |
-| --- | --- |
-| `make` | Run lint, formatting checks, type checks, tests, and the demo. |
-| `make setup` | Create `.venv` and install runtime and development tools. |
-| `make test` | Run `pytest`. |
-| `make lint` | Run `ruff check` and `ruff format --check`. |
-| `make types` | Run `mypy src`. |
-| `make demo` | Print the demo results. |
-| `make clean` | Remove `.venv`, `lake/`, tool caches, and Python bytecode caches. |
+## Results from a real run
 
-The check and demo targets run dependency setup first. Once dependencies are installed, invoke tools directly with `.venv/bin/python -m pytest`, `.venv/bin/python -m ruff check .`, `.venv/bin/python -m ruff format --check .`, or `.venv/bin/python -m mypy src`.
+![Execution evidence: shared current state, report comparisons, change reasons, and actual Delta versions](docs/results/snapshot.png)
 
-## What the example demonstrates
+The architecture uses a scalable vector diagram, and the result image is a high-resolution Chrome capture of the generated [HTML evidence report](docs/results/index.html), built by reading versioned Delta rows. The data is synthetic; the table reads and calculated results are real. Inspect the [full rows and provenance](docs/results/tables.json) or the [scenario output](docs/results/demo.txt).
 
-Silver's first load holds every change for orders 1 to 5. Order **2** was updated at position 2 and cancelled at position 3, but position 2 arrived late, after the cancellation. Order **3** was delivered twice. Order **4** has two different changes at the same position 2. Order **5** was created and then deleted. Order **6** arrives in a later commit.
+| Observation | Before | After the shared rule |
+| --- | --- | --- |
+| Order 2 | Sales counts **60**; operations says **cancelled 60** | Cancellation wins by source position; sales excludes it and operations retains it |
+| Order 4 | Sales counts **45**; operations shows **accepted 40** | Conflicting changes at the winning position are held for review |
+| Accepted sales total | **275** | **170** |
+| Shared current state | Each report chooses separately | Orders **1, 2, 3**; order **4** held; order **5** deleted |
+| Comparison against a newer version | Same initial input | Order **6** adds a data change, demonstrating why the migration must pin its input |
+| Operations cancellations | **1** with the filter in Gold | Would become **0** if sales' accepted-only filter moved into Silver |
 
-| Step | Expected result |
-| --- | --- |
-| Run both reports with their own copy of the rule | For order 2, sales counts **60** (the late arrival wins) while operations shows it **cancelled**. For order 4, sales picks **45** and operations picks **40**. |
-| Apply the shared Silver rule | Current state: orders 1, 2 (cancelled), and 3. Order **4** is held for review. Order 5 is removed. |
-| Point both reports at the shared state and compare on the same Silver version | Sales loses orders 2 and 4; operations loses order 4. The sales total goes from **275** to **170**, and every change has a reason. |
-| Compare against a newer Silver version instead | Order **6** appears as a third change. It is new data, not a rule change. |
-| Move the sales report's accepted-only filter into Silver too | Operations would lose its cancelled order: its cancelled count goes from **1** to **0**. The filter stays in Gold. |
+### Reproduce the evidence
 
-The executable prints all outcomes. [`test_article_claims.py`](tests/test_article_claims.py) checks the reported values against a real temporary Delta table.
+Run the demo first, then export its existing snapshots and capture the result:
 
-## Example output
-
-The following successful `./run_demo.sh` run passed all **8 tests** and printed the results below. Test timing varies by machine; package installation and update notices are omitted.
-
-```text
-$ ./run_demo.sh
-{out}
+```bash
+.venv/bin/python -m src.inspection
+.venv/bin/python scripts/capture_snapshot.py
 ```
 
-## Data and change semantics
+The exporter is **read only against the lake**. It writes `index.html`, `tables.json`, and `demo.txt` under `docs/results/`. It uses the pinned version in `lake/run.json`; pass `--pinned-version N` to inspect a different version or a table without a manifest.
 
-Each Silver row is one change:
+The screenshot helper requires local Chrome or Chromium. Use `CHROME_BIN` or `--browser` for a custom executable. It supports `--width`, `--height`, and `--scale`. The HTML opens locally without a server or network assets. When viewed on GitHub, download the HTML to open it, or inspect the PNG and JSON directly.
+
+```bash
+make results       # Export existing Delta snapshots
+make snapshot      # Export, then capture the HTML with Chrome/Chromium
+```
+
+## Architecture
+
+![Version-pinned data flow from Delta history through shared Silver state to Gold report comparison](docs/architecture.svg)
+
+Both legacy reports and the shared rule read **the same pinned history version**. The scenario computes `CurrentState` once per snapshot and passes that object to both new reports. A second version demonstrates how new arrivals can contaminate a migration comparison.
+
+| Responsibility | Implementation |
+| --- | --- |
+| Choose the current version of an order | [`rules.py`](src/rules.py): deduplicate, order by source position, apply deletes, withhold conflicts |
+| Decide what a report counts | [`reports.py`](src/reports.py): sales accepts only accepted orders; operations includes cancellations |
+| Explain changed report answers | [`compare.py`](src/compare.py): compare keys and assign a reason using the state at that version |
+| Store and read versioned history | [`repository.py`](src/repository.py): Delta adapter implementing `ChangeStore` |
+| Coordinate the migration example | [`scenario.py`](src/scenario.py): injected seed and storage contract |
+| Wire the local runtime | [`silver_rule_demo.py`](src/silver_rule_demo.py): paths, seed loading, Delta adapter, run manifest, terminal output |
+| Export inspectable evidence | [`inspection.py`](src/inspection.py): read-only Delta inspection, HTML, JSON, and transcript |
+
+**Persistence boundary:** only `silver_order_changes` is a Delta table in this project. The shared current state, review list, migration change log, and Gold answers are computed in memory. The architecture does not imply persisted Silver current-state or Gold tables.
+
+## Data and rule semantics
+
+[`data/order_changes.json`](data/order_changes.json) contains **11 initial changes** for orders 1–5 and **one later change** for order 6. See the [seed timeline](data/README.md).
 
 | Field | Meaning |
 | --- | --- |
-| `order_id` | Integer order identifier. |
-| `source_seq` | The source's position for the change. Higher means later in the source. |
-| `op` | `upsert` or `delete`. |
-| `status` | `accepted` or `cancelled`; `null` for a delete. |
-| `amount` | Whole-number amount; `null` for a delete. |
-| `arrived_at` | When the pipeline received the change, as an `HH:MM` string. |
+| `order_id` | Integer order identifier |
+| `source_seq` | Position of the change in the source; a higher value is later |
+| `op` | `upsert` or `delete` |
+| `status` | `accepted` or `cancelled`; null for a delete |
+| `amount` | Whole-number amount; null for a delete |
+| `arrived_at` | Pipeline arrival time as an `HH:MM` string, within this single-day example |
 
-[`current_state`](src/rules.py) first drops exact repeats (same order, position, operation, status, and amount). It then keeps the rows at each order's highest position. One row there is the order's current version, unless it is a delete; two or more different rows are a conflict, and the order is listed in `exceptions` instead of being guessed.
+The shared rule collapses repeat deliveries with the same order, position, operation, status, and amount. It then considers each order's highest source position. One unambiguous upsert becomes current; a delete removes the order. Different changes at the winning position place the order in `exceptions`. An older conflict does not block a later unambiguous version.
 
-Reports answer with one value per order: sales gives the amount of accepted orders, operations gives "status amount" for every order it shows. [`change_log`](src/compare.py) lists every order whose answer differs and explains it from the shared state: a conflict, a cancellation, a delete, or new data. The reasons come from these rules; in a real migration, each one is a claim the report owner should check against a few real orders.
+The two legacy rules illustrate the problem: sales picks the last arrival, while operations picks the highest source position and keeps the first row seen on a tie. Neither is the shared conflict policy.
 
-See [`data/README.md`](data/README.md) for the seed fields and timeline.
+## Related Bronze → Silver repair lake
 
-## Architecture and SOLID assessment
+The supplied `../bronze-to-silver-repair/lake` is a **separate example**. Its persisted Bronze, Silver, and Gold tables use different schemas from this project's order change log. It is useful for viewing physical layer outputs, but it is not input to this migration scenario.
 
-```mermaid
-flowchart LR
-    CLI[silver_rule_demo.py<br/>reporting] --> Scenario[scenario.py<br/>wiring and orchestration]
-    Scenario --> Reports[reports.py<br/>sales and operations]
-    Scenario --> Compare[compare.py<br/>change log]
-    Scenario --> Delta[repository.py<br/>Delta change log]
-    Reports --> Rules[rules.py<br/>copied and shared rules]
-    Compare --> Models[models.py]
-    Rules --> Models
-    Reports -. implements Report .-> Contracts[protocols.py]
+The attached evidence also includes a read-only inspection of that lake:
+
+| Table | Inspected version | Rows |
+| --- | --- | --- |
+| `bronze_order_changes` | **3** | **15** events |
+| `silver_orders` | **6** | **8** orders |
+| `gold_daily_order_totals` | **2** | **7** groups |
+
+Its Gold aggregation matches its Silver rows and counts **8 orders**. These are captured observations; rerunning the other project may change its versions and rows. Full records are included under `related_lake` in [tables.json](docs/results/tables.json).
+
+To include that optional lake in a new export:
+
+```bash
+.venv/bin/python -m src.inspection \
+  --related-lake ../bronze-to-silver-repair/lake
+.venv/bin/python scripts/capture_snapshot.py
 ```
 
-The code broadly follows SOLID at the scale of a teaching project, with specific gaps:
+This command does not modify either lake. The three related tables are read at their individual captured versions; pause their writers when cross-table consistency matters.
 
-| Principle | Assessment |
+## Development
+
+```bash
+make               # Install development tools; lint, format check, types, tests, demo
+```
+
+| Command | Purpose |
 | --- | --- |
-| **Single responsibility** | What an order is (`rules.py`), what a report counts (`reports.py`), why an answer changed (`compare.py`), persistence, orchestration, and reporting are separate modules. |
-| **Open/closed** | A new report is a new class with `name` and `answer`; the scenario treats every report through the `Report` interface. |
-| **Liskov substitution** | The before and after reports share the `Report` contract and return one answer per order. The answer types differ by report (an amount or a status string), so callers must not assume one shape. |
-| **Interface segregation** | `Report` has one method. The storage adapter has no interface of its own; the scenario uses the Delta class directly. |
-| **Dependency inversion** | Rules, reports, and the change log are pure pandas and never import `deltalake`. Only `scenario.py` creates the Delta table. The "after" reports call `current_state` directly instead of receiving the shared state, so they recompute it rather than read it. |
+| `make setup` | Create `.venv`; install runtime dependencies, pytest, Ruff, and mypy |
+| `make test` | Run the test suite |
+| `make lint` | Check lint and formatting |
+| `make types` | Run `mypy src` |
+| `make demo` | Run the Delta-backed example |
+| `make results` | Export existing lake evidence without rerunning the demo |
+| `make snapshot` | Export evidence and capture the report |
+| `make clean` | Remove `.venv`, the entire generated `lake/` directory, and tool caches |
 
-The current structure is useful for the example. Before broadening it, persist the current state as its own table, pass it to the reports instead of recomputing it, and give the change-log store an interface with an in-memory fake.
-
-## Repository layout
+After setup, tools can also be invoked directly with `.venv/bin/python -m pytest`, `-m ruff check .`, `-m ruff format --check .`, and `-m mypy src`.
 
 ```text
-.
-├── data/
-│   ├── order_changes.json   # Synthetic order changes, plus one later arrival
-│   └── README.md            # Seed fields and timeline
-├── src/
-│   ├── models.py            # CurrentState and Change value objects; column names
-│   ├── protocols.py         # Report interface
-│   ├── rules.py             # The two copied rules and the shared Silver rule (pure pandas)
-│   ├── reports.py           # Sales and operations, before and after
-│   ├── compare.py           # Key-by-key change log with reasons
-│   ├── repository.py        # Silver order changes as a local Delta table
-│   ├── scenario.py          # Example orchestration and structured results
-│   └── silver_rule_demo.py  # Composition root and printed report
-├── tests/
-│   ├── conftest.py               # Temporary Delta scenario fixture
-│   ├── test_article_claims.py    # End-to-end checks of the example results
-│   └── test_rules.py             # Shared rule and change-log reasons without storage
-├── Makefile
-├── pyproject.toml
-├── requirements.txt
-└── run_demo.sh
+data/                   Synthetic source changes and their timeline
+src/
+  models.py             CurrentState and Change value objects
+  protocols.py          Generic Report and versioned ChangeStore contracts
+  rules.py              Legacy selectors and shared Silver policy
+  reports.py            Sales and operations before/after reports
+  compare.py            Per-order comparison and explanations
+  repository.py         Local Delta adapter
+  scenario.py           Storage-independent orchestration
+  silver_rule_demo.py    CLI composition root and run manifest
+  inspection.py         Read-only evidence exporter
+tests/                  Unit, contract, and Delta integration checks
+scripts/                Browser screenshot helper
+docs/architecture.svg   Editable vector architecture diagram
+docs/results/           Committed PNG, HTML, JSON, and terminal evidence
 ```
 
-## Scope and limitations
+## Scope
 
-- **Local demonstration:** all reads are materialized in pandas. Six synthetic orders illustrate correctness, not throughput or cost.
-- **No persisted current state:** the shared rule is computed in memory on each read. A real migration would materialize it as a Silver model beside the change log, not replace a history readers depend on.
-- **Conflict policy:** two different changes at the same position are held back and listed. The rule does not decide them, and nothing here routes the list to an owner.
-- **One-row-per-order check:** the rule guarantees one row per order by construction. A real table needs its own test that counts keys, because per-record checks such as pipeline expectations cannot see across rows.
-- **Reader discovery:** the two reports are known in advance. Finding real readers, for example through Unity Catalog lineage, and moving them one at a time are outside the code.
-- **Engine scope:** the rule is plain pandas over a local Delta table. It does not establish how Databricks AUTO CDC orders changes or breaks ties.
+This is a correctness example over six synthetic orders, with all reads materialized in pandas. It does not benchmark scale, persist the shared current state, route review exceptions, discover downstream readers, or execute Databricks AUTO CDC, expectations, or Unity Catalog lineage. A production migration needs those operational decisions and explicit data-contract validation.
 
-## Data and license
-
-All example data is synthetic. No `LICENSE` file is included, and the repository does not currently declare a reuse license.
+All example data is synthetic. The repository currently has no `LICENSE` file and declares no reuse license.

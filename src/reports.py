@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pandas as pd
 
-from .rules import current_state, latest_by_arrival, latest_by_position_first_seen
+from .models import CurrentState
+from .rules import latest_by_arrival, latest_by_position_first_seen
 
 
 class SalesBefore:
@@ -12,8 +15,8 @@ class SalesBefore:
 
     name = "sales"
 
-    def answer(self, changes: pd.DataFrame) -> dict[int, int | str]:
-        cur = latest_by_arrival(changes)
+    def answer(self, source: pd.DataFrame) -> dict[int, int]:
+        cur = latest_by_arrival(source)
         cur = cur[cur["status"] == "accepted"]
         return {int(r.order_id): int(r.amount) for r in cur.itertuples()}
 
@@ -23,8 +26,8 @@ class OperationsBefore:
 
     name = "operations"
 
-    def answer(self, changes: pd.DataFrame) -> dict[int, int | str]:
-        cur = latest_by_position_first_seen(changes)
+    def answer(self, source: pd.DataFrame) -> dict[int, str]:
+        cur = latest_by_position_first_seen(source)
         cur = cur[cur["op"] != "delete"]
         return {int(r.order_id): f"{r.status} {int(r.amount)}" for r in cur.itertuples()}
 
@@ -34,9 +37,8 @@ class SalesAfter:
 
     name = "sales"
 
-    def answer(self, changes: pd.DataFrame) -> dict[int, int | str]:
-        state = current_state(changes)
-        return {r["order_id"]: int(r["amount"]) for r in state.orders if r["status"] == "accepted"}
+    def answer(self, source: CurrentState) -> dict[int, int]:
+        return {r["order_id"]: int(r["amount"]) for r in source.orders if r["status"] == "accepted"}
 
 
 class OperationsAfter:
@@ -44,11 +46,10 @@ class OperationsAfter:
 
     name = "operations"
 
-    def answer(self, changes: pd.DataFrame) -> dict[int, int | str]:
-        state = current_state(changes)
-        return {r["order_id"]: f"{r['status']} {int(r['amount'])}" for r in state.orders}
+    def answer(self, source: CurrentState) -> dict[int, str]:
+        return {r["order_id"]: f"{r['status']} {int(r['amount'])}" for r in source.orders}
 
 
-def cancelled_count(answer: dict[int, int | str]) -> int:
+def cancelled_count(answer: Mapping[int, int | str]) -> int:
     """How many orders a report shows as cancelled."""
     return sum(1 for v in answer.values() if str(v).startswith("cancelled"))

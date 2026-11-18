@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold Rule to Silver — execution evidence</title><style>
+* { box-sizing:border-box; }
+body { margin:0; background:#f5f7fa; color:#172d3c;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+main { max-width:1440px; padding:38px 48px 30px; margin:auto; }
+header { border-bottom:2px solid #172d3c; padding-bottom:20px; }
+.eyebrow,.section-title span { font:600 12px ui-monospace,Menlo,monospace; letter-spacing:1px; color:#466377; }
+.eyebrow { display:flex; justify-content:space-between; }
+h1 { font-size:39px; letter-spacing:-1.1px; margin:17px 0 10px; }
+p { color:#526777; font-size:14px; line-height:1.6; margin:8px 0 15px; }
+header p { font-size:16px; margin-bottom:0; }
+.metrics { display:grid; grid-template-columns:1.25fr 1fr 1fr 1.1fr; gap:16px; margin:22px 0; }
+.metric { border:1px solid #dbe3e9; background:white; padding:15px 20px; border-radius:7px; }
+.metric span { display:block; color:#526777; font-size:12px; margin-bottom:9px; }
+.metric strong { font-size:28px; color:#08685e; letter-spacing:-.6px; }
+.metric small { display:block; color:#526777; font-size:11px; margin-top:7px; }
+.metric.review strong { color:#9b5c13; }
+.grid { display:grid; grid-template-columns:1.12fr 1fr; gap:22px; }
+section { background:#fff; border:1px solid #dbe3e9; border-radius:7px; padding:20px 22px; margin-bottom:20px; }
+.section-title { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+h2 { font-size:19px; font-weight:650; letter-spacing:-.3px; margin:0; }
+table { width:100%; border-collapse:collapse; text-align:left; }
+th { font-size:11px; color:#526777; border-top:1px solid #aec0cc; border-bottom:1px solid #aec0cc; }
+td,th { padding:10px 11px; }
+td { font:13px ui-monospace,Menlo,monospace; border-bottom:1px solid #e4eaf0; line-height:1.45; }
+tr:last-child td { border-bottom:0; }
+tr.review td { background:#fff6e9; color:#875116; }
+.note { margin-bottom:0; font-size:12px; }
+code { font:12px ui-monospace,Menlo,monospace; }
+footer { padding-top:2px; color:#526777; font-size:11px; line-height:1.8; }
+details { margin:18px 0; } summary { cursor:pointer; color:#08685e; font-size:13px; }
+details table { margin-top:16px; background:white; }
+a { color:#08685e; }
+@media(max-width:900px) { main { padding:24px; } .grid,.metrics { grid-template-columns:1fr; }
+section { overflow-x:auto; } h1 { font-size:30px; } }
+</style></head><body><main>
+<header><div class="eyebrow"><span>GOLD RULE TO SILVER / EXECUTION EVIDENCE</span>
+<span>REAL DELTA ROWS · SYNTHETIC DATA</span></div><h1>One shared rule. Consistent report answers.</h1>
+<p>Before and after computed from the same pinned Delta version.
+The source history is persisted; current state and Gold reports are computed in pandas.</p></header>
+<div class="metrics">
+<div class="metric"><span>Accepted sales total</span>
+<strong>275 → 170</strong>
+<small>Rule correction on unchanged input</small></div>
+<div class="metric"><span>Shared current state</span><strong>3 orders</strong>
+<small>Includes 1 cancelled order for operations</small></div>
+<div class="metric review"><span>Held for review</span><strong>1 order</strong>
+<small>Conflicting source versions are withheld</small></div>
+<div class="metric"><span>Pinned → latest history</span><strong>v2 → v3</strong>
+<small>11 → 12 persisted change rows</small></div></div>
+<div class="grid"><section><div class="section-title"><h2>Shared Silver current state</h2><span>COMPUTED</span></div>
+<p>Exact repeats collapse; highest source position wins; deletes remove an order.</p><table><thead><tr><th scope="col">Order</th><th scope="col">Source seq</th><th scope="col">Status</th><th scope="col">Amount</th></tr></thead><tbody><tr><td>1</td><td>1</td><td>accepted</td><td>100</td></tr><tr><td>2</td><td>3</td><td>cancelled</td><td>60</td></tr><tr><td>3</td><td>1</td><td>accepted</td><td>70</td></tr></tbody></table>
+<p class="note">The accepted-only sales filter stays in Gold. Operations retains cancellations.</p></section>
+<section><div class="section-title"><h2>Review evidence</h2><span>WITHHELD</span></div>
+<p>Source changes for the held order(s). Conflicts at the winning position require a decision.</p><table><thead><tr><th scope="col">Order</th><th scope="col">Seq</th><th scope="col">Amount</th><th scope="col">Arrival</th></tr></thead><tbody><tr><td>4</td><td>1</td><td>35</td><td>09:05</td></tr><tr><td>4</td><td>2</td><td>40</td><td>09:30</td></tr><tr><td>4</td><td>2</td><td>45</td><td>09:40</td></tr></tbody></table>
+<p class="note">Deleted order IDs: 5.
+Deleted orders are absent from the shared current state.</p></section></div>
+<section><div class="section-title"><h2>Report answers / same pinned version</h2>
+<span>v2</span></div>
+<p>“—” means the report has no answer for that order. Gold filters remain report specific.</p><table><thead><tr><th scope="col">Order</th><th scope="col">Sales before</th><th scope="col">Sales after</th><th scope="col">Operations before</th><th scope="col">Operations after</th><th scope="col">Decision</th></tr></thead><tbody><tr><td>1</td><td>100</td><td>100</td><td>accepted 100</td><td>accepted 100</td><td>current</td></tr><tr><td>2</td><td>60</td><td>—</td><td>cancelled 60</td><td>cancelled 60</td><td>current</td></tr><tr><td>3</td><td>70</td><td>70</td><td>accepted 70</td><td>accepted 70</td><td>current</td></tr><tr class="review"><td>4</td><td>45</td><td>—</td><td>accepted 40</td><td>—</td><td>held for review</td></tr></tbody></table></section>
+<section><div class="section-title"><h2>Migration change log</h2><span>KEY BY KEY</span></div>
+<p>Every changed answer has an explanation derived from the shared state at the comparison version.</p><table><thead><tr><th scope="col">Report</th><th scope="col">Order</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Reason</th></tr></thead><tbody><tr><td>sales</td><td>2</td><td>60</td><td>—</td><td>cancelled by the source; source order wins over arrival</td></tr><tr><td>sales</td><td>4</td><td>45</td><td>—</td><td>conflict at the same source position; held for review</td></tr><tr><td>operations</td><td>4</td><td>accepted 40</td><td>—</td><td>conflict at the same source position; held for review</td></tr></tbody></table>
+<p class="note">New order IDs in v3 relative to the pinned input: 6.
+Changes in input must not be counted as a rule change.</p></section>
+<section><div class="section-title"><h2>Related lake / separate repair example</h2>
+<span>READ ONLY</span></div><p><code>bronze-to-silver-repair/lake</code> uses different schemas.
+Its Gold aggregation matches its Silver rows and counts 8 orders.</p><table><thead><tr><th scope="col">Delta table</th><th scope="col">Version</th><th scope="col">Rows</th></tr></thead><tbody><tr><td>bronze_order_changes</td><td>v3</td><td>15</td></tr><tr><td>silver_orders</td><td>v6</td><td>8</td></tr><tr><td>gold_daily_order_totals</td><td>v2</td><td>7</td></tr></tbody></table></section>
+<details><summary>Inspect all 11 persisted source rows
+at pinned v2</summary><table><thead><tr><th scope="col">order_id</th><th scope="col">source_seq</th><th scope="col">op</th><th scope="col">status</th><th scope="col">amount</th><th scope="col">arrived_at</th></tr></thead><tbody><tr><td>1</td><td>1</td><td>upsert</td><td>accepted</td><td>100</td><td>09:00</td></tr><tr><td>2</td><td>1</td><td>upsert</td><td>accepted</td><td>50</td><td>09:00</td></tr><tr><td>2</td><td>2</td><td>upsert</td><td>accepted</td><td>60</td><td>10:05</td></tr><tr><td>2</td><td>3</td><td>upsert</td><td>cancelled</td><td>60</td><td>09:20</td></tr><tr><td>3</td><td>1</td><td>upsert</td><td>accepted</td><td>70</td><td>09:10</td></tr><tr><td>3</td><td>1</td><td>upsert</td><td>accepted</td><td>70</td><td>09:11</td></tr><tr><td>4</td><td>1</td><td>upsert</td><td>accepted</td><td>35</td><td>09:05</td></tr><tr><td>4</td><td>2</td><td>upsert</td><td>accepted</td><td>40</td><td>09:30</td></tr><tr><td>4</td><td>2</td><td>upsert</td><td>accepted</td><td>45</td><td>09:40</td></tr><tr><td>5</td><td>1</td><td>upsert</td><td>accepted</td><td>80</td><td>09:00</td></tr><tr><td>5</td><td>2</td><td>delete</td><td>—</td><td>—</td><td>09:50</td></tr></tbody></table></details>
+<footer>Captured 2026-11-18T12:53:09+00:00 · python 3.12.6 · deltalake 1.6.6 · pandas 3.1.1 · pyarrow 26.0.1<br>
+Read-only export from <code>lake/silver_order_changes</code> ·
+<a href="tables.json">Full rows and provenance (JSON)</a> · <a href="demo.txt">Scenario output</a><br>
+Pinned row SHA-256: <code>16aab691367935ef17fbdbd6ad37eb0e938fca74432abf45de9d773e00c49fac</code></footer>
+</main></body></html>

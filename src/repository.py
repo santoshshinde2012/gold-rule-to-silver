@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pyarrow as pa
@@ -28,7 +29,13 @@ class SilverOrderChanges:
     def __init__(self, root: Path) -> None:
         self.path = str(root / "silver_order_changes")
 
-    def append(self, rows: list[dict]) -> int:
+    def replace(self, rows: list[dict[str, Any]]) -> int:
+        """Start a fresh demo snapshot without deleting the table or its history."""
+        table = pa.Table.from_pylist(rows, schema=SCHEMA)
+        write_deltalake(self.path, table, mode="overwrite")
+        return self.version()
+
+    def append(self, rows: list[dict[str, Any]]) -> int:
         table = pa.Table.from_pylist(rows, schema=SCHEMA)
         if Path(self.path).exists():
             write_deltalake(self.path, table, mode="append")

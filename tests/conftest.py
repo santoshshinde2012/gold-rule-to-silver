@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from src.scenario import run
+from src.silver_rule_demo import run
 
 
 @pytest.fixture(scope="session")

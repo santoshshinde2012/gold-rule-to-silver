@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from itertools import permutations
+
 import pandas as pd
 
 from src.compare import change_log
-from src.models import CurrentState
+from src.models import CHANGE_COLUMNS, CurrentState
 from src.rules import current_state
 
 
@@ -37,3 +39,32 @@ def test_change_log_reasons_come_from_the_shared_state() -> None:
         (4, "conflict at the same source position; held for review"),
         (5, "deleted by the source"),
     ]
+
+
+def test_winning_conflicts_and_source_order_are_independent_of_row_order() -> None:
+    rows = [
+        {"order_id": 1, "source_seq": 2, "op": "upsert", "status": "accepted", "amount": 5, "arrived_at": "09:00"},
+        {"order_id": 1, "source_seq": 2, "op": "upsert", "status": "accepted", "amount": 6, "arrived_at": "10:00"},
+        {"order_id": 2, "source_seq": 2, "op": "upsert", "status": "cancelled", "amount": 7, "arrived_at": "09:00"},
+        {"order_id": 2, "source_seq": 1, "op": "upsert", "status": "accepted", "amount": 7, "arrived_at": "10:00"},
+    ]
+    expected = current_state(pd.DataFrame(rows))
+    assert expected.exceptions == [1]
+    assert [(r["order_id"], r["status"]) for r in expected.orders] == [(2, "cancelled")]
+    for ordering in permutations(rows):
+        assert current_state(pd.DataFrame(ordering)) == expected
+
+
+def test_later_unambiguous_position_supersedes_an_older_conflict() -> None:
+    rows = [
+        {"order_id": 1, "source_seq": 1, "op": "upsert", "status": "accepted", "amount": 5, "arrived_at": "09:00"},
+        {"order_id": 1, "source_seq": 1, "op": "upsert", "status": "accepted", "amount": 6, "arrived_at": "10:00"},
+        {"order_id": 1, "source_seq": 2, "op": "upsert", "status": "accepted", "amount": 7, "arrived_at": "11:00"},
+    ]
+    state = current_state(pd.DataFrame(rows))
+    assert state.exceptions == []
+    assert state.orders[0]["amount"] == 7
+
+
+def test_empty_change_history_has_no_orders_or_exceptions() -> None:
+    assert current_state(pd.DataFrame(columns=CHANGE_COLUMNS)) == CurrentState([], [])

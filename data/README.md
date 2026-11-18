@@ -6,8 +6,8 @@
 
 | Key | Contents |
 | --- | --- |
-| `first_load` | Every change the source sent for orders 1 to 5, in arrival order. Written to Silver as version 0. |
-| `later_arrival` | Order 6, which arrives in a later commit (version 1). Used to show why the comparison pins one Silver version. |
+| `first_load` | Every change the source sent for orders 1 to 5, in arrival order. Written as version 0 on a new table. |
+| `later_arrival` | Order 6, which arrives in the next commit (version 1 on a new table). Shows why comparisons pin one version. |
 
 Each change contains `order_id`, `source_seq`, `op`, `status`, `amount`, and `arrived_at`. `source_seq` is the order of changes inside the source; `arrived_at` is when the pipeline received them. A delete has `null` status and amount.
 
@@ -22,8 +22,10 @@ Each change contains `order_id`, `source_seq`, `op`, `status`, `amount`, and `ar
 
 ## Scenario order
 
-1. Load the first batch into Silver (version 0) and run both reports with their copied rules.
+1. Replace the demo table's current snapshot with the first batch and run both legacy reports on that pinned version.
 2. Compute the shared current state and its review list.
-3. Run both reports on the shared state and compare old and new answers on version 0.
-4. Append order 6 (version 1) and repeat the sales comparison against it.
+3. Run both reports on the shared state and compare old and new answers on the same pinned version.
+4. Append order 6 in a later version and repeat the sales comparison against it.
 5. Show what happens to operations if the accepted-only filter moved into Silver.
+
+Reruns retain the Delta table's history, so version numbers increase. `lake/run.json` records the actual pinned and latest versions.
