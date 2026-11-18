@@ -1,0 +1,18 @@
+{
+  "first_load": [
+    {"order_id": 1, "source_seq": 1, "op": "upsert", "status": "accepted",  "amount": 100, "arrived_at": "09:00"},
+    {"order_id": 2, "source_seq": 1, "op": "upsert", "status": "accepted",  "amount": 50,  "arrived_at": "09:00"},
+    {"order_id": 2, "source_seq": 3, "op": "upsert", "status": "cancelled", "amount": 60,  "arrived_at": "09:20"},
+    {"order_id": 2, "source_seq": 2, "op": "upsert", "status": "accepted",  "amount": 60,  "arrived_at": "10:05"},
+    {"order_id": 3, "source_seq": 1, "op": "upsert", "status": "accepted",  "amount": 70,  "arrived_at": "09:10"},
+    {"order_id": 3, "source_seq": 1, "op": "upsert", "status": "accepted",  "amount": 70,  "arrived_at": "09:11"},
+    {"order_id": 4, "source_seq": 1, "op": "upsert", "status": "accepted",  "amount": 35,  "arrived_at": "09:05"},
+    {"order_id": 4, "source_seq": 2, "op": "upsert", "status": "accepted",  "amount": 40,  "arrived_at": "09:30"},
+    {"order_id": 4, "source_seq": 2, "op": "upsert", "status": "accepted",  "amount": 45,  "arrived_at": "09:40"},
+    {"order_id": 5, "source_seq": 1, "op": "upsert", "status": "accepted",  "amount": 80,  "arrived_at": "09:00"},
+    {"order_id": 5, "source_seq": 2, "op": "delete", "status": null,        "amount": null, "arrived_at": "09:50"}
+  ],
+  "later_arrival": [
+    {"order_id": 6, "source_seq": 1, "op": "upsert", "status": "accepted",  "amount": 90,  "arrived_at": "11:00"}
+  ]
+}
