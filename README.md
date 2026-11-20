@@ -159,3 +159,7 @@ docs/results/           Committed PNG, HTML, JSON, and terminal evidence
 This is a correctness example over six synthetic orders, with all reads materialized in pandas. It does not benchmark scale, persist the shared current state, route review exceptions, discover downstream readers, or execute Databricks AUTO CDC, expectations, or Unity Catalog lineage. A production migration needs those operational decisions and explicit data-contract validation.
 
 All example data is synthetic. The repository currently has no `LICENSE` file and declares no reuse license.
+
+## Support
+
+[![Buy Me a Coffee](https://img.shields.io/badge/buymeacoffee-black?style=for-the-badge&logo=buymeacoffee&logoColor=white)](https://buymeacoffee.com/santoshshin)
